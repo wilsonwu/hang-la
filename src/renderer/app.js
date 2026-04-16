@@ -12,6 +12,13 @@ const TOOLBAR_ICONS = {
       <path d="M10.9 4.45l2.65 2.65"></path>
     </svg>
   `,
+  delete: `
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M5.75 6.25h8.5"></path>
+      <path d="M8 6.25V4.5h4v1.75"></path>
+      <path d="M7.25 6.25l.5 9h4.5l.5-9"></path>
+    </svg>
+  `,
   editOff: `
     <svg viewBox="0 0 20 20" aria-hidden="true">
       <path d="M5 5l10 10"></path>
@@ -123,6 +130,7 @@ void syncFullscreenState();
 
 function bindEvents() {
   editorForm.addEventListener('submit', onSubmitItem);
+  window.addEventListener('resize', syncLaneCardSizes);
   pickImageButton.addEventListener('click', onPickImage);
   clearImageButton.addEventListener('click', () => {
     draftImage = null;
@@ -252,6 +260,21 @@ function renderBoard() {
     }
     boardElement.append(laneFragment);
   }
+
+  requestAnimationFrame(syncLaneCardSizes);
+}
+
+function syncLaneCardSizes() {
+  const dropzones = boardElement.querySelectorAll('.lane-dropzone');
+
+  for (const dropzone of dropzones) {
+    const computedStyle = window.getComputedStyle(dropzone);
+    const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+    const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+    const availableHeight = dropzone.clientHeight - paddingTop - paddingBottom;
+    const safeCardSize = Math.max(Math.floor(availableHeight), 48);
+    dropzone.style.setProperty('--card-size', `${safeCardSize}px`);
+  }
 }
 
 function getItemsInLane(laneId) {
@@ -319,6 +342,7 @@ function createPoolActionButton(type) {
 function createItemCard(item) {
   const itemFragment = itemTemplate.content.cloneNode(true);
   const itemElement = itemFragment.querySelector('.rank-item');
+  const editButton = itemFragment.querySelector('.item-edit');
   const deleteButton = itemFragment.querySelector('.item-delete');
   const visualElement = itemFragment.querySelector('.item-visual');
   const titleElement = itemFragment.querySelector('.item-title');
@@ -327,6 +351,8 @@ function createItemCard(item) {
   itemElement.dataset.itemId = item.id;
   itemElement.draggable = !isEditMode;
   itemElement.classList.toggle('is-edit-mode', isEditMode);
+  editButton.innerHTML = TOOLBAR_ICONS.edit;
+  deleteButton.innerHTML = TOOLBAR_ICONS.delete;
   titleElement.textContent = item.title;
   noteElement.textContent = item.note || '';
 
@@ -341,6 +367,11 @@ function createItemCard(item) {
     badge.textContent = item.badge?.trim() || item.title.slice(0, 2);
     visualElement.append(badge);
   }
+
+  editButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    openEditor(item.id);
+  });
 
   deleteButton.addEventListener('click', (event) => {
     event.stopPropagation();
