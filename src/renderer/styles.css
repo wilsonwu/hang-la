@@ -177,6 +177,12 @@ p {
   box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.1);
 }
 
+.pool-action-button.is-active {
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(17, 17, 17, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.08);
+}
+
 .pool-action-button:active {
   transform: translateY(1px);
 }
@@ -209,6 +215,14 @@ p {
   animation: rise-in 180ms ease both;
 }
 
+.rank-item.is-edit-mode {
+  cursor: pointer;
+}
+
+.rank-item.is-edit-mode:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
+}
+
 .lane--pool .rank-item {
   width: 84px;
   min-height: 88px;
@@ -236,20 +250,14 @@ p {
   transition: opacity 140ms ease, transform 140ms ease;
 }
 
-.item-edit {
-  right: 28px;
-  background: rgba(17, 17, 17, 0.08);
-  color: #111111;
-}
-
 .item-delete {
   right: 4px;
   background: rgba(255, 59, 48, 0.16);
   color: #aa150e;
 }
 
-.rank-item:hover .item-action,
-.rank-item:focus-within .item-action {
+.rank-item.is-edit-mode .item-delete,
+.rank-item.is-edit-mode:focus-within .item-delete {
   opacity: 1;
   transform: translateY(0);
 }

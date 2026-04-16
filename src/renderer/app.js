@@ -6,6 +6,18 @@ const TOOLBAR_ICONS = {
       <path d="M4.25 10h11.5"></path>
     </svg>
   `,
+  edit: `
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M4.25 15.75l3.1-.55 7.15-7.15-2.55-2.55L4.8 12.65l-.55 3.1z"></path>
+      <path d="M10.9 4.45l2.65 2.65"></path>
+    </svg>
+  `,
+  editOff: `
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M5 5l10 10"></path>
+      <path d="M15 5L5 15"></path>
+    </svg>
+  `,
   fullscreen: `
     <svg viewBox="0 0 20 20" aria-hidden="true">
       <path d="M7 3.75H3.75V7"></path>
@@ -103,6 +115,7 @@ let draftImage = null;
 let editingItemId = null;
 let draggedItemId = null;
 let isFullscreen = false;
+let isEditMode = false;
 
 renderBoard();
 bindEvents();
@@ -173,6 +186,16 @@ function updateFullscreenState(nextState) {
   renderBoard();
 }
 
+function updateEditModeState(nextState) {
+  const normalizedState = Boolean(nextState);
+  if (normalizedState === isEditMode) {
+    return;
+  }
+
+  isEditMode = normalizedState;
+  renderBoard();
+}
+
 function loadState() {
   const savedValue = localStorage.getItem(STORAGE_KEY);
 
@@ -238,7 +261,11 @@ function getItemsInLane(laneId) {
 function createPoolActions() {
   const actions = document.createElement('div');
   actions.className = 'pool-actions';
-  actions.append(createPoolActionButton('create'), createPoolActionButton('fullscreen'));
+  actions.append(
+    createPoolActionButton('create'),
+    createPoolActionButton('edit-mode'),
+    createPoolActionButton('fullscreen')
+  );
   return actions;
 }
 
@@ -254,6 +281,19 @@ function createPoolActionButton(type) {
     button.addEventListener('click', (event) => {
       event.stopPropagation();
       openEditor();
+    });
+    return button;
+  }
+
+  if (type === 'edit-mode') {
+    const nextLabel = isEditMode ? '退出编辑模式' : '进入编辑模式';
+    button.title = nextLabel;
+    button.setAttribute('aria-label', nextLabel);
+    button.innerHTML = isEditMode ? TOOLBAR_ICONS.editOff : TOOLBAR_ICONS.edit;
+    button.classList.toggle('is-active', isEditMode);
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      updateEditModeState(!isEditMode);
     });
     return button;
   }
@@ -279,13 +319,14 @@ function createPoolActionButton(type) {
 function createItemCard(item) {
   const itemFragment = itemTemplate.content.cloneNode(true);
   const itemElement = itemFragment.querySelector('.rank-item');
-  const editButton = itemFragment.querySelector('.item-edit');
   const deleteButton = itemFragment.querySelector('.item-delete');
   const visualElement = itemFragment.querySelector('.item-visual');
   const titleElement = itemFragment.querySelector('.item-title');
   const noteElement = itemFragment.querySelector('.item-note');
 
   itemElement.dataset.itemId = item.id;
+  itemElement.draggable = !isEditMode;
+  itemElement.classList.toggle('is-edit-mode', isEditMode);
   titleElement.textContent = item.title;
   noteElement.textContent = item.note || '';
 
@@ -301,17 +342,29 @@ function createItemCard(item) {
     visualElement.append(badge);
   }
 
-  editButton.addEventListener('click', (event) => {
+  deleteButton.addEventListener('click', (event) => {
     event.stopPropagation();
+    confirmDeleteItem(item.id);
+  });
+
+  itemElement.addEventListener('click', (event) => {
+    if (!isEditMode) {
+      return;
+    }
+
+    if (event.target.closest('.item-action')) {
+      return;
+    }
+
     openEditor(item.id);
   });
 
-  deleteButton.addEventListener('click', (event) => {
-    event.stopPropagation();
-    deleteItem(item.id);
-  });
-
   itemElement.addEventListener('dragstart', (event) => {
+    if (isEditMode) {
+      event.preventDefault();
+      return;
+    }
+
     draggedItemId = item.id;
     itemElement.classList.add('is-dragging');
     event.dataTransfer.effectAllowed = 'move';
@@ -331,6 +384,10 @@ function createItemCard(item) {
 
 function wireDropzone(dropzone) {
   dropzone.addEventListener('dragover', (event) => {
+    if (isEditMode) {
+      return;
+    }
+
     event.preventDefault();
     dropzone.classList.add('is-over');
 
@@ -355,6 +412,10 @@ function wireDropzone(dropzone) {
   });
 
   dropzone.addEventListener('drop', (event) => {
+    if (isEditMode) {
+      return;
+    }
+
     event.preventDefault();
     const itemId = event.dataTransfer.getData('text/plain') || draggedItemId;
     const nextLaneId = dropzone.dataset.laneId;
@@ -501,4 +562,18 @@ function deleteItem(itemId) {
   boardState.items = boardState.items.filter((item) => item.id !== itemId);
   saveState();
   renderBoard();
+}
+
+function confirmDeleteItem(itemId) {
+  const targetItem = boardState.items.find((item) => item.id === itemId);
+  if (!targetItem) {
+    return;
+  }
+
+  const confirmed = window.confirm(`确定删除“${targetItem.title}”吗？此操作无法撤销。`);
+  if (!confirmed) {
+    return;
+  }
+
+  deleteItem(itemId);
 }
