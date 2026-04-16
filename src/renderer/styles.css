@@ -233,6 +233,23 @@ p {
   transform: scale(0.96);
 }
 
+.rank-item.is-drag-source-hidden {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+}
+
+.drag-placeholder {
+  opacity: 0.42;
+  pointer-events: none;
+  transform: none;
+}
+
 .item-action {
   position: absolute;
   top: 4px;

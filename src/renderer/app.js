@@ -123,6 +123,10 @@ let editingItemId = null;
 let draggedItemId = null;
 let isFullscreen = false;
 let isEditMode = false;
+let draggedItemElement = null;
+let dragPlaceholderElement = null;
+let activeDropzone = null;
+let transparentDragImage = null;
 
 renderBoard();
 bindEvents();
@@ -264,6 +268,84 @@ function renderBoard() {
   requestAnimationFrame(syncLaneCardSizes);
 }
 
+function getTransparentDragImage() {
+  if (transparentDragImage) {
+    return transparentDragImage;
+  }
+
+  transparentDragImage = document.createElement('canvas');
+  transparentDragImage.width = 1;
+  transparentDragImage.height = 1;
+  return transparentDragImage;
+}
+
+function createDragPlaceholder(sourceElement, itemId) {
+  const placeholder = sourceElement.cloneNode(true);
+  placeholder.classList.remove('is-edit-mode', 'is-dragging', 'is-drag-source-hidden');
+  placeholder.classList.add('drag-placeholder');
+  placeholder.draggable = false;
+  placeholder.dataset.itemId = itemId;
+  placeholder.setAttribute('aria-hidden', 'true');
+
+  placeholder.querySelectorAll('.item-action').forEach((actionButton) => {
+    actionButton.remove();
+  });
+
+  return placeholder;
+}
+
+function setActiveDropzone(dropzone) {
+  if (activeDropzone && activeDropzone !== dropzone) {
+    activeDropzone.classList.remove('is-over');
+  }
+
+  activeDropzone = dropzone;
+
+  if (activeDropzone) {
+    activeDropzone.classList.add('is-over');
+  }
+}
+
+function placeDragPlaceholder(dropzone, afterElement) {
+  if (!dragPlaceholderElement) {
+    return;
+  }
+
+  if (afterElement == null) {
+    if (dragPlaceholderElement.parentElement !== dropzone || dropzone.lastElementChild !== dragPlaceholderElement) {
+      dropzone.append(dragPlaceholderElement);
+    }
+    return;
+  }
+
+  if (afterElement === dragPlaceholderElement) {
+    return;
+  }
+
+  if (dragPlaceholderElement.parentElement !== dropzone || dragPlaceholderElement.nextElementSibling !== afterElement) {
+    dropzone.insertBefore(dragPlaceholderElement, afterElement);
+  }
+}
+
+function clearDragState() {
+  if (dragPlaceholderElement) {
+    dragPlaceholderElement.remove();
+    dragPlaceholderElement = null;
+  }
+
+  if (draggedItemElement) {
+    draggedItemElement.classList.remove('is-dragging', 'is-drag-source-hidden');
+    draggedItemElement = null;
+  }
+
+  draggedItemId = null;
+
+  if (activeDropzone) {
+    activeDropzone.classList.remove('is-over');
+    activeDropzone = null;
+  }
+}
+
 function syncLaneCardSizes() {
   const dropzones = boardElement.querySelectorAll('.lane-dropzone');
 
@@ -397,17 +479,22 @@ function createItemCard(item) {
     }
 
     draggedItemId = item.id;
+    draggedItemElement = itemElement;
+    dragPlaceholderElement = createDragPlaceholder(itemElement, item.id);
     itemElement.classList.add('is-dragging');
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', item.id);
+    event.dataTransfer.setDragImage(getTransparentDragImage(), 0, 0);
+
+    requestAnimationFrame(() => {
+      if (draggedItemElement === itemElement) {
+        itemElement.classList.add('is-drag-source-hidden');
+      }
+    });
   });
 
   itemElement.addEventListener('dragend', () => {
-    draggedItemId = null;
-    itemElement.classList.remove('is-dragging');
-    document.querySelectorAll('.lane-dropzone').forEach((dropzone) => {
-      dropzone.classList.remove('is-over');
-    });
+    clearDragState();
   });
 
   return itemElement;
@@ -420,26 +507,15 @@ function wireDropzone(dropzone) {
     }
 
     event.preventDefault();
-    dropzone.classList.add('is-over');
+    event.dataTransfer.dropEffect = 'move';
+    setActiveDropzone(dropzone);
 
     const afterElement = getDragAfterElement(dropzone, event.clientX);
-    const draggingElement = document.querySelector('.rank-item.is-dragging');
-
-    if (!draggingElement) {
+    if (!dragPlaceholderElement) {
       return;
     }
 
-    if (afterElement == null) {
-      dropzone.append(draggingElement);
-    } else {
-      dropzone.insertBefore(draggingElement, afterElement);
-    }
-  });
-
-  dropzone.addEventListener('dragleave', (event) => {
-    if (!dropzone.contains(event.relatedTarget)) {
-      dropzone.classList.remove('is-over');
-    }
+    placeDragPlaceholder(dropzone, afterElement);
   });
 
   dropzone.addEventListener('drop', (event) => {
@@ -455,14 +531,19 @@ function wireDropzone(dropzone) {
       return;
     }
 
-    const orderedIds = Array.from(dropzone.querySelectorAll('.rank-item')).map((element) => element.dataset.itemId);
+    const orderedIds = Array.from(dropzone.children)
+      .filter((element) => element.dataset?.itemId && !element.classList.contains('is-drag-source-hidden'))
+      .map((element) => element.dataset.itemId);
+
+    clearDragState();
     moveItem(itemId, nextLaneId, orderedIds);
-    dropzone.classList.remove('is-over');
   });
 }
 
 function getDragAfterElement(dropzone, pointerX) {
-  const candidateElements = [...dropzone.querySelectorAll('.rank-item:not(.is-dragging)')];
+  const candidateElements = [
+    ...dropzone.querySelectorAll('.rank-item:not(.is-dragging):not(.is-drag-source-hidden):not(.drag-placeholder)')
+  ];
 
   return candidateElements.reduce(
     (closest, element) => {
