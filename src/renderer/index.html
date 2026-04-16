@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>夯到拉排序器</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero-panel">
+        <div>
+          <p class="eyebrow">Hang to La Sorter</p>
+          <h1>夯到拉排序器</h1>
+          <p class="hero-copy">
+            把品牌、作品、人物、产品或任何你想排的东西，从“夯”一路排到“拉”。
+          </p>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-card">
+            <span class="stat-label">分级</span>
+            <strong>6 横栏</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">操作</span>
+            <strong>拖拽 / 增删改</strong>
+          </div>
+          <div class="stat-card accent-card">
+            <span class="stat-label">数据</span>
+            <strong>自动保存在本地</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="board" id="board"></main>
+    </div>
+
+    <dialog class="editor-dialog" id="editorDialog">
+      <form class="editor-form" id="editorForm" method="dialog">
+        <div class="editor-header">
+          <div>
+            <p class="eyebrow">内容编辑器</p>
+            <h2 id="dialogTitle">新增排序项</h2>
+          </div>
+          <button type="button" class="ghost-button" id="closeDialogButton">关闭</button>
+        </div>
+
+        <label class="field-group">
+          <span>名称</span>
+          <input id="itemTitleInput" name="title" maxlength="24" placeholder="例如：XX 品牌" required />
+        </label>
+
+        <label class="field-group">
+          <span>文字图标</span>
+          <input id="itemBadgeInput" name="badge" maxlength="6" placeholder="例如：潮、神、A1" />
+        </label>
+
+        <div class="field-group">
+          <span>图片图标</span>
+          <div class="image-picker-row">
+            <button type="button" class="primary-button" id="pickImageButton">选择图片</button>
+            <button type="button" class="ghost-button" id="clearImageButton">清空图片</button>
+          </div>
+          <div class="image-preview" id="imagePreview">
+            <span class="placeholder-text">未选择图片</span>
+          </div>
+        </div>
+
+        <label class="field-group">
+          <span>备注</span>
+          <textarea id="itemNoteInput" name="note" maxlength="80" placeholder="可选：写一点辨识信息"></textarea>
+        </label>
+
+        <div class="editor-actions">
+          <button type="button" class="ghost-button" id="cancelDialogButton">取消</button>
+          <button type="submit" class="primary-button">保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <template id="laneTemplate">
+      <section class="lane">
+        <div class="lane-header">
+          <div>
+            <p class="lane-tag"></p>
+            <h2 class="lane-title"></h2>
+          </div>
+          <div class="lane-tools"></div>
+        </div>
+        <div class="lane-dropzone"></div>
+      </section>
+    </template>
+
+    <template id="itemTemplate">
+      <article class="rank-item" draggable="true">
+        <button class="item-action item-edit" type="button" title="编辑">改</button>
+        <button class="item-action item-delete" type="button" title="删除">删</button>
+        <div class="item-visual"></div>
+        <div class="item-content">
+          <strong class="item-title"></strong>
+          <p class="item-note"></p>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>

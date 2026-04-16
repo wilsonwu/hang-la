@@ -1,0 +1,20 @@
+{
+  "name": "hang-la",
+  "version": "1.0.0",
+  "description": "Electron desktop tool for ranking items from 夯 to 拉.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "electron",
+    "tier-list",
+    "ranking",
+    "hang-la"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^36.2.1"
+  }
+}
