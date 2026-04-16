@@ -52,6 +52,36 @@ npm start
 
 项目内已配置 Electron 二进制镜像，国内网络环境下安装会更稳定。
 
+## 打包发布
+
+当前版本号：`0.1.0`
+
+### Windows
+
+```bash
+npm install
+npm run dist:win
+```
+
+构建完成后，产物会输出到 `release/` 目录，默认包含：
+
+- `nsis` 安装包
+- `portable` 免安装可执行版本
+
+### macOS
+
+```bash
+npm install
+npm run dist:mac
+```
+
+macOS 构建配置已经补齐，但实际打包建议在 macOS 环境下执行。构建成功后会在 `release/` 目录生成：
+
+- `dmg` 安装镜像
+- `zip` 压缩分发包
+
+如果后续需要正式对外发布 macOS 版本，建议再补充应用图标、签名和 notarization 配置。
+
 ## 项目结构
 
 ```text

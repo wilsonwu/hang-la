@@ -1,10 +1,14 @@
 {
   "name": "hang-la",
-  "version": "1.0.0",
-  "description": "Electron desktop tool for ranking items from 夯 to 拉.",
+  "version": "0.1.0",
+  "description": "Desktop Hang-to-La ranking tool built with Electron.",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist:win": "electron-builder --win nsis portable",
+    "dist:mac": "electron-builder --mac dmg zip",
+    "dist": "electron-builder --win nsis portable"
   },
   "keywords": [
     "electron",
@@ -15,6 +19,62 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^36.2.1"
+    "electron": "^36.2.1",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.hangla.desktop",
+    "productName": "HangLa",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "package.json",
+      "src/**/*"
+    ],
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable-${arch}.${ext}"
+    },
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
+      ]
+    }
   }
 }
