@@ -8,7 +8,8 @@ function createWindow() {
     height: 960,
     minWidth: 1120,
     minHeight: 760,
-    backgroundColor: '#f6efe2',
+    show: false,
+    backgroundColor: '#d1d1d1',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -16,7 +17,55 @@ function createWindow() {
     }
   });
 
-  window.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  window.once('ready-to-show', () => {
+    console.log('[main] ready-to-show');
+    window.show();
+  });
+
+  window.webContents.on('did-finish-load', async () => {
+    console.log('[main] did-finish-load', window.webContents.getURL());
+
+    try {
+      const renderSummary = await window.webContents.executeJavaScript(
+        `(() => ({
+          title: document.title,
+          bodyChildren: document.body.children.length,
+          boardExists: Boolean(document.getElementById('board')),
+          laneCount: document.querySelectorAll('.lane').length,
+          bodyText: document.body.innerText.slice(0, 120)
+        }))()`
+      );
+      console.log('[main] render-summary', renderSummary);
+    } catch (error) {
+      console.error('[main] render-summary failed', error);
+    }
+
+    if (!window.isVisible()) {
+      console.log('[main] showing window from did-finish-load fallback');
+      window.show();
+    }
+  });
+
+  window.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedUrl) => {
+    console.error('[main] did-fail-load', { errorCode, errorDescription, validatedUrl });
+  });
+
+  window.webContents.on('render-process-gone', (_event, details) => {
+    console.error('[main] render-process-gone', details);
+  });
+
+  window.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    if (level >= 2) {
+      console.error('[renderer]', { sourceId, line, message });
+      return;
+    }
+
+    console.log('[renderer]', { sourceId, line, message });
+  });
+
+  window.loadFile(path.join(__dirname, 'renderer', 'index.html')).catch((error) => {
+    console.error('[main] loadFile failed', error);
+  });
 }
 
 app.whenReady().then(() => {

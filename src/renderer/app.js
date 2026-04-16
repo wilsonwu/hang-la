@@ -1,41 +1,62 @@
-const STORAGE_KEY = 'hang-la-board-state-v1';
+const STORAGE_KEY = 'hang-la-board-state-v2';
+const appBridgeApi = window.hangLaApi || {
+  pickImage: async () => null
+};
 
 const LANES = [
   {
     id: 'pool',
-    tag: 'Input Pool',
+    tag: '',
     title: '自定义内容栏',
-    emptyText: '先在这里新增内容，再拖到下面分档。'
+    emptyText: '',
+    labelColor: '#1b1b1b',
+    labelTextColor: '#f4efe4',
+    zoneColor: '#d8d8d8'
   },
   {
     id: 'hang',
-    tag: 'Tier S+',
+    tag: '',
     title: '夯',
-    emptyText: '最顶的都放这里。'
+    emptyText: '',
+    labelColor: '#ef3326',
+    labelTextColor: '#111111',
+    zoneColor: '#bfbfbf'
   },
   {
     id: 'top',
-    tag: 'Tier S',
+    tag: '',
     title: '顶级',
-    emptyText: '很强，但还没到夯。'
+    emptyText: '',
+    labelColor: '#ffd44e',
+    labelTextColor: '#111111',
+    zoneColor: '#bfbfbf'
   },
   {
     id: 'elite',
-    tag: 'Tier A',
+    tag: '',
     title: '人上人',
-    emptyText: '明显高于平均线。'
+    emptyText: '',
+    labelColor: '#fff100',
+    labelTextColor: '#111111',
+    zoneColor: '#bfbfbf'
   },
   {
     id: 'npc',
-    tag: 'Tier B',
+    tag: '',
     title: 'NPC',
-    emptyText: '普通，没有存在感。'
+    emptyText: '',
+    labelColor: '#f4e9c9',
+    labelTextColor: '#111111',
+    zoneColor: '#bfbfbf'
   },
   {
     id: 'la',
-    tag: 'Tier F',
-    title: '拉',
-    emptyText: '垫底区域。'
+    tag: '',
+    title: '拉完了',
+    emptyText: '',
+    labelColor: '#f3f3f3',
+    labelTextColor: '#111111',
+    zoneColor: '#bfbfbf'
   }
 ];
 
@@ -90,22 +111,7 @@ function loadState() {
   }
 
   return {
-    items: [
-      createSeedItem('瑞幸', '咖', '示例：可以是品牌', 'pool'),
-      createSeedItem('黑神话', '游', '示例：可以是作品', 'hang'),
-      createSeedItem('某平台 UI', '设', '示例：可以是产品', 'npc')
-    ]
-  };
-}
-
-function createSeedItem(title, badge, note, laneId) {
-  return {
-    id: crypto.randomUUID(),
-    title,
-    badge,
-    note,
-    image: null,
-    laneId
+    items: []
   };
 }
 
@@ -125,10 +131,15 @@ function renderBoard() {
     const dropzone = laneFragment.querySelector('.lane-dropzone');
 
     laneTag.textContent = lane.tag;
+    laneTag.hidden = !lane.tag;
     laneTitle.textContent = lane.title;
     dropzone.dataset.laneId = lane.id;
     dropzone.dataset.emptyText = lane.emptyText;
     dropzone.classList.toggle('is-empty', getItemsInLane(lane.id).length === 0);
+    laneElement.classList.add(lane.id === 'pool' ? 'lane--pool' : 'lane--tier');
+    laneElement.style.setProperty('--lane-label-bg', lane.labelColor);
+    laneElement.style.setProperty('--lane-label-color', lane.labelTextColor);
+    laneElement.style.setProperty('--lane-zone-bg', lane.zoneColor);
 
     if (lane.id === 'pool') {
       const addButton = document.createElement('button');
@@ -137,7 +148,7 @@ function renderBoard() {
       addButton.textContent = '新增内容';
       addButton.addEventListener('click', () => openEditor());
       laneTools.append(addButton);
-    } else {
+
       const counter = document.createElement('button');
       counter.type = 'button';
       counter.className = 'ghost-button';
@@ -151,8 +162,6 @@ function renderBoard() {
     for (const item of getItemsInLane(lane.id)) {
       dropzone.append(createItemCard(item));
     }
-
-    laneElement.style.setProperty('--lane-accent', lane.id === 'hang' ? '#d79a1e' : '#cc481d');
     boardElement.append(laneFragment);
   }
 }
@@ -335,7 +344,7 @@ function renderImagePreview() {
 }
 
 async function onPickImage() {
-  const selectedImage = await window.hangLaApi.pickImage();
+  const selectedImage = await appBridgeApi.pickImage();
   if (!selectedImage) {
     return;
   }
