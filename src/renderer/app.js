@@ -1,7 +1,29 @@
 const STORAGE_KEY = 'hang-la-board-state-v2';
-const appBridgeApi = window.hangLaApi || {
-  pickImage: async () => null
+const TOOLBAR_ICONS = {
+  create: `
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M10 4.25v11.5"></path>
+      <path d="M4.25 10h11.5"></path>
+    </svg>
+  `,
+  fullscreen: `
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M7 3.75H3.75V7"></path>
+      <path d="M13 3.75h3.25V7"></path>
+      <path d="M16.25 13v3.25H13"></path>
+      <path d="M7 16.25H3.75V13"></path>
+    </svg>
+  `,
+  restore: `
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M6 6.5h8.25v8.25H6z"></path>
+      <path d="M9.75 3.75H16.25V10.25"></path>
+      <path d="M9.75 3.75v2.5H6.5v3.25H4"></path>
+    </svg>
+  `
 };
+
+const appBridgeApi = window.hangLaApi || createPreviewBridgeApi();
 
 const LANES = [
   {
@@ -80,9 +102,11 @@ let boardState = loadState();
 let draftImage = null;
 let editingItemId = null;
 let draggedItemId = null;
+let isFullscreen = false;
 
 renderBoard();
 bindEvents();
+void syncFullscreenState();
 
 function bindEvents() {
   editorForm.addEventListener('submit', onSubmitItem);
@@ -94,6 +118,59 @@ function bindEvents() {
   cancelDialogButton.addEventListener('click', closeEditor);
   closeDialogButton.addEventListener('click', closeEditor);
   editorDialog.addEventListener('close', resetEditor);
+
+  if (typeof appBridgeApi.onFullscreenChanged === 'function') {
+    appBridgeApi.onFullscreenChanged((nextState) => {
+      updateFullscreenState(nextState);
+    });
+  }
+}
+
+function createPreviewBridgeApi() {
+  return {
+    pickImage: async () => null,
+    toggleFullscreen: async () => {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return false;
+      }
+
+      if (typeof document.documentElement.requestFullscreen === 'function') {
+        await document.documentElement.requestFullscreen();
+        return true;
+      }
+
+      return false;
+    },
+    getFullscreenState: async () => Boolean(document.fullscreenElement),
+    onFullscreenChanged: (callback) => {
+      const listener = () => callback(Boolean(document.fullscreenElement));
+      document.addEventListener('fullscreenchange', listener);
+
+      return () => {
+        document.removeEventListener('fullscreenchange', listener);
+      };
+    }
+  };
+}
+
+async function syncFullscreenState() {
+  try {
+    const nextState = await appBridgeApi.getFullscreenState();
+    updateFullscreenState(nextState);
+  } catch (error) {
+    console.warn('Failed to sync fullscreen state:', error);
+  }
+}
+
+function updateFullscreenState(nextState) {
+  const normalizedState = Boolean(nextState);
+  if (normalizedState === isFullscreen) {
+    return;
+  }
+
+  isFullscreen = normalizedState;
+  renderBoard();
 }
 
 function loadState() {
@@ -142,19 +219,7 @@ function renderBoard() {
     laneElement.style.setProperty('--lane-zone-bg', lane.zoneColor);
 
     if (lane.id === 'pool') {
-      const addButton = document.createElement('button');
-      addButton.type = 'button';
-      addButton.className = 'primary-button';
-      addButton.textContent = '新增内容';
-      addButton.addEventListener('click', () => openEditor());
-      laneTools.append(addButton);
-
-      const counter = document.createElement('button');
-      counter.type = 'button';
-      counter.className = 'ghost-button';
-      counter.textContent = `${getItemsInLane(lane.id).length} 项`;
-      counter.disabled = true;
-      laneTools.append(counter);
+      dropzone.append(createPoolActions());
     }
 
     wireDropzone(dropzone);
@@ -168,6 +233,47 @@ function renderBoard() {
 
 function getItemsInLane(laneId) {
   return boardState.items.filter((item) => item.laneId === laneId);
+}
+
+function createPoolActions() {
+  const actions = document.createElement('div');
+  actions.className = 'pool-actions';
+  actions.append(createPoolActionButton('create'), createPoolActionButton('fullscreen'));
+  return actions;
+}
+
+function createPoolActionButton(type) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = `pool-action-button pool-action-button--${type}`;
+
+  if (type === 'create') {
+    button.title = '新建';
+    button.setAttribute('aria-label', '新建');
+    button.innerHTML = TOOLBAR_ICONS.create;
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      openEditor();
+    });
+    return button;
+  }
+
+  const nextLabel = isFullscreen ? '退出全屏' : '全屏';
+  button.title = nextLabel;
+  button.setAttribute('aria-label', nextLabel);
+  button.innerHTML = isFullscreen ? TOOLBAR_ICONS.restore : TOOLBAR_ICONS.fullscreen;
+  button.addEventListener('click', async (event) => {
+    event.stopPropagation();
+
+    try {
+      const nextState = await appBridgeApi.toggleFullscreen();
+      updateFullscreenState(nextState);
+    } catch (error) {
+      console.warn('Failed to toggle fullscreen:', error);
+    }
+  });
+
+  return button;
 }
 
 function createItemCard(item) {

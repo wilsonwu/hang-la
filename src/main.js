@@ -2,6 +2,14 @@ const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 
+function broadcastFullscreenState(window) {
+  if (!window || window.isDestroyed()) {
+    return;
+  }
+
+  window.webContents.send('window:fullscreen-changed', window.isFullScreen());
+}
+
 function createWindow() {
   const window = new BrowserWindow({
     width: 1440,
@@ -18,32 +26,22 @@ function createWindow() {
   });
 
   window.once('ready-to-show', () => {
-    console.log('[main] ready-to-show');
     window.show();
   });
 
-  window.webContents.on('did-finish-load', async () => {
-    console.log('[main] did-finish-load', window.webContents.getURL());
-
-    try {
-      const renderSummary = await window.webContents.executeJavaScript(
-        `(() => ({
-          title: document.title,
-          bodyChildren: document.body.children.length,
-          boardExists: Boolean(document.getElementById('board')),
-          laneCount: document.querySelectorAll('.lane').length,
-          bodyText: document.body.innerText.slice(0, 120)
-        }))()`
-      );
-      console.log('[main] render-summary', renderSummary);
-    } catch (error) {
-      console.error('[main] render-summary failed', error);
-    }
-
+  window.webContents.on('did-finish-load', () => {
+    broadcastFullscreenState(window);
     if (!window.isVisible()) {
-      console.log('[main] showing window from did-finish-load fallback');
       window.show();
     }
+  });
+
+  window.on('enter-full-screen', () => {
+    broadcastFullscreenState(window);
+  });
+
+  window.on('leave-full-screen', () => {
+    broadcastFullscreenState(window);
   });
 
   window.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedUrl) => {
@@ -52,15 +50,6 @@ function createWindow() {
 
   window.webContents.on('render-process-gone', (_event, details) => {
     console.error('[main] render-process-gone', details);
-  });
-
-  window.webContents.on('console-message', (_event, level, message, line, sourceId) => {
-    if (level >= 2) {
-      console.error('[renderer]', { sourceId, line, message });
-      return;
-    }
-
-    console.log('[renderer]', { sourceId, line, message });
   });
 
   window.loadFile(path.join(__dirname, 'renderer', 'index.html')).catch((error) => {
@@ -93,6 +82,26 @@ app.whenReady().then(() => {
       name: path.basename(selectedPath),
       dataUrl: `data:${mimeType};base64,${fileBuffer.toString('base64')}`
     };
+  });
+
+  ipcMain.handle('window:toggle-fullscreen', (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (!window) {
+      return false;
+    }
+
+    const nextState = !window.isFullScreen();
+    window.setFullScreen(nextState);
+    return nextState;
+  });
+
+  ipcMain.handle('window:get-fullscreen-state', (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (!window) {
+      return false;
+    }
+
+    return window.isFullScreen();
   });
 
   createWindow();

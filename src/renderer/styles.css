@@ -65,6 +65,10 @@ p {
   background: var(--lane-zone-bg, #bababa);
 }
 
+.lane--pool {
+  grid-template-columns: 1fr;
+}
+
 .lane-header {
   padding: 12px 10px;
   border-right: 2px solid var(--border);
@@ -79,9 +83,7 @@ p {
 }
 
 .lane--pool .lane-header {
-  align-items: flex-start;
-  text-align: left;
-  padding: 12px;
+  display: none;
 }
 
 .lane-tag {
@@ -129,6 +131,10 @@ p {
   transition: background 140ms ease;
 }
 
+.lane--pool .lane-dropzone {
+  padding: 42px 10px 10px;
+}
+
 .lane-dropzone.is-over {
   background: #a8a8a8;
 }
@@ -141,6 +147,48 @@ p {
   transform: translateY(-50%);
   font-size: 12px;
   color: rgba(17, 17, 17, 0.42);
+}
+
+.pool-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.pool-action-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(17, 17, 17, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.04);
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.pool-action-button:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: rgba(17, 17, 17, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.1);
+}
+
+.pool-action-button:active {
+  transform: translateY(1px);
+}
+
+.pool-action-button svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.85;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .rank-item {
@@ -399,6 +447,10 @@ p {
     gap: 6px;
   }
 
+  .lane--pool .lane-dropzone {
+    padding-top: 38px;
+  }
+
   .lane-title {
     font-size: 22px;
   }
@@ -416,5 +468,10 @@ p {
   .item-visual,
   .lane--pool .item-visual {
     height: 42px;
+  }
+
+  .pool-action-button {
+    width: 26px;
+    height: 26px;
   }
 }
