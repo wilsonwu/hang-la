@@ -3,21 +3,49 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 
 const PROJECT_REPOSITORY_URL = 'https://github.com/wilsonwu/hang-la';
+const APP_DISPLAY_NAME = '夯到拉排序器';
+const APP_ABOUT_CREDITS = `一个“夯到拉”桌面排序工具。\nGitHub: ${PROJECT_REPOSITORY_URL}`;
 
-function applyDevelopmentAppIcon() {
-  if (process.platform !== 'darwin' || app.isPackaged || typeof app.dock?.setIcon !== 'function') {
+function getMacAppIconPath() {
+  if (process.platform !== 'darwin') {
+    return null;
+  }
+
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'icon.icns')
+    : path.join(app.getAppPath(), 'build', 'icon.png');
+}
+
+function applyMacAppIcon() {
+  if (process.platform !== 'darwin' || typeof app.dock?.setIcon !== 'function') {
     return;
   }
 
-  const iconPath = path.join(app.getAppPath(), 'build', 'icon.png');
+  const iconPath = getMacAppIconPath();
+  if (!iconPath) {
+    return;
+  }
+
   const dockIcon = nativeImage.createFromPath(iconPath);
 
   if (dockIcon.isEmpty()) {
-    console.warn('[main] failed to load development app icon', { iconPath });
+    console.warn('[main] failed to load mac app icon', { iconPath });
     return;
   }
 
   app.dock.setIcon(dockIcon);
+}
+
+function configureMacAboutPanel() {
+  if (process.platform !== 'darwin' || typeof app.setAboutPanelOptions !== 'function') {
+    return;
+  }
+
+  app.setAboutPanelOptions({
+    applicationName: APP_DISPLAY_NAME,
+    applicationVersion: app.getVersion(),
+    credits: APP_ABOUT_CREDITS
+  });
 }
 
 function broadcastFullscreenState(window) {
@@ -76,7 +104,8 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  applyDevelopmentAppIcon();
+  applyMacAppIcon();
+  configureMacAboutPanel();
 
   ipcMain.handle('media:pick-image', async () => {
     const result = await dialog.showOpenDialog({

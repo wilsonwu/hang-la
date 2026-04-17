@@ -64,6 +64,10 @@
     "mac": {
       "icon": "build/icon.icns",
       "category": "public.app-category.utilities",
+      "extendInfo": {
+        "CFBundleDisplayName": "夯到拉排序器",
+        "CFBundleName": "夯到拉排序器"
+      },
       "target": [
         {
           "target": "dmg",
