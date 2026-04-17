@@ -36,9 +36,10 @@ const TOOLBAR_ICONS = {
   `,
   restore: `
     <svg viewBox="0 0 20 20" aria-hidden="true">
-      <path d="M6 6.5h8.25v8.25H6z"></path>
-      <path d="M9.75 3.75H16.25V10.25"></path>
-      <path d="M9.75 3.75v2.5H6.5v3.25H4"></path>
+      <path d="M8 4.25V8H4.25"></path>
+      <path d="M12 4.25V8H15.75"></path>
+      <path d="M15.75 12H12v3.75"></path>
+      <path d="M4.25 12H8v3.75"></path>
     </svg>
   `,
   github: `
