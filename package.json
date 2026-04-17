@@ -7,7 +7,7 @@
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist:win": "electron-builder --win nsis portable",
-    "dist:mac": "electron-builder --mac dmg zip",
+    "dist:mac": "electron-builder --mac",
     "dist": "electron-builder --win nsis portable"
   },
   "keywords": [
