@@ -1,6 +1,8 @@
-const { app, BrowserWindow, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
 const fs = require('node:fs/promises');
 const path = require('node:path');
+
+const PROJECT_REPOSITORY_URL = 'https://github.com/wilsonwu/hang-la';
 
 function broadcastFullscreenState(window) {
   if (!window || window.isDestroyed()) {
@@ -102,6 +104,11 @@ app.whenReady().then(() => {
     }
 
     return window.isFullScreen();
+  });
+
+  ipcMain.handle('shell:open-project-repository', async () => {
+    await shell.openExternal(PROJECT_REPOSITORY_URL);
+    return true;
   });
 
   createWindow();

@@ -49,6 +49,18 @@ p {
   padding: var(--page-padding);
 }
 
+.floating-actions {
+  position: fixed;
+  display: flex;
+  gap: 6px;
+  z-index: 4;
+}
+
+.floating-actions--bottom-right {
+  right: calc(var(--page-padding) + 8px);
+  bottom: calc(var(--page-padding) + 8px);
+}
+
 .board {
   height: 100%;
   display: grid;
@@ -502,5 +514,10 @@ p {
   .pool-action-button {
     width: 26px;
     height: 26px;
+  }
+
+  .floating-actions--bottom-right {
+    right: calc(var(--page-padding) + 6px);
+    bottom: calc(var(--page-padding) + 6px);
   }
 }

@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'hang-la-board-state-v2';
+const PROJECT_REPOSITORY_URL = 'https://github.com/wilsonwu/hang-la';
 const TOOLBAR_ICONS = {
   create: `
     <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -38,6 +39,11 @@ const TOOLBAR_ICONS = {
       <path d="M6 6.5h8.25v8.25H6z"></path>
       <path d="M9.75 3.75H16.25V10.25"></path>
       <path d="M9.75 3.75v2.5H6.5v3.25H4"></path>
+    </svg>
+  `,
+  github: `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" stroke="none" d="M12 .75a11.25 11.25 0 0 0-3.56 21.92c.56.1.75-.24.75-.54v-2.08c-3.04.66-3.68-1.3-3.68-1.3-.5-1.24-1.2-1.57-1.2-1.57-.98-.67.08-.66.08-.66 1.08.08 1.66 1.12 1.66 1.12.96 1.64 2.52 1.16 3.14.9.1-.7.38-1.16.68-1.42-2.42-.28-4.97-1.2-4.97-5.4 0-1.2.43-2.18 1.12-2.95-.12-.28-.49-1.4.1-2.92 0 0 .92-.3 3.02 1.12a10.4 10.4 0 0 1 5.5 0c2.1-1.42 3.01-1.12 3.01-1.12.6 1.52.23 2.64.11 2.92.7.77 1.12 1.75 1.12 2.95 0 4.21-2.56 5.11-5 5.38.39.34.74 1 .74 2.03v3.01c0 .3.2.65.76.54A11.25 11.25 0 0 0 12 .75Z"></path>
     </svg>
   `
 };
@@ -116,6 +122,7 @@ const pickImageButton = document.getElementById('pickImageButton');
 const clearImageButton = document.getElementById('clearImageButton');
 const cancelDialogButton = document.getElementById('cancelDialogButton');
 const closeDialogButton = document.getElementById('closeDialogButton');
+const floatingActionsElement = document.getElementById('floatingActions');
 
 let boardState = loadState();
 let draftImage = null;
@@ -129,6 +136,7 @@ let activeDropzone = null;
 let transparentDragImage = null;
 
 renderBoard();
+renderFloatingActions();
 bindEvents();
 void syncFullscreenState();
 
@@ -175,6 +183,10 @@ function createPreviewBridgeApi() {
       return () => {
         document.removeEventListener('fullscreenchange', listener);
       };
+    },
+    openProjectRepository: async () => {
+      window.open(PROJECT_REPOSITORY_URL, '_blank', 'noopener,noreferrer');
+      return true;
     }
   };
 }
@@ -372,6 +384,38 @@ function createPoolActions() {
     createPoolActionButton('fullscreen')
   );
   return actions;
+}
+
+function renderFloatingActions() {
+  if (!floatingActionsElement) {
+    return;
+  }
+
+  floatingActionsElement.replaceChildren(createActionButton('github'));
+}
+
+function createActionButton(type) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = `pool-action-button pool-action-button--${type}`;
+
+  if (type === 'github') {
+    button.title = 'GitHub 仓库';
+    button.setAttribute('aria-label', '打开 GitHub 仓库');
+    button.innerHTML = TOOLBAR_ICONS.github;
+    button.addEventListener('click', async (event) => {
+      event.stopPropagation();
+
+      try {
+        await appBridgeApi.openProjectRepository();
+      } catch (error) {
+        console.warn('Failed to open project repository:', error);
+      }
+    });
+    return button;
+  }
+
+  return createPoolActionButton(type);
 }
 
 function createPoolActionButton(type) {
