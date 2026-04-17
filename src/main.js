@@ -1,8 +1,24 @@
-const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, shell, nativeImage } = require('electron');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 
 const PROJECT_REPOSITORY_URL = 'https://github.com/wilsonwu/hang-la';
+
+function applyDevelopmentAppIcon() {
+  if (process.platform !== 'darwin' || app.isPackaged || typeof app.dock?.setIcon !== 'function') {
+    return;
+  }
+
+  const iconPath = path.join(app.getAppPath(), 'build', 'icon.png');
+  const dockIcon = nativeImage.createFromPath(iconPath);
+
+  if (dockIcon.isEmpty()) {
+    console.warn('[main] failed to load development app icon', { iconPath });
+    return;
+  }
+
+  app.dock.setIcon(dockIcon);
+}
 
 function broadcastFullscreenState(window) {
   if (!window || window.isDestroyed()) {
@@ -60,6 +76,8 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  applyDevelopmentAppIcon();
+
   ipcMain.handle('media:pick-image', async () => {
     const result = await dialog.showOpenDialog({
       properties: ['openFile'],

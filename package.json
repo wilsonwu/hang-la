@@ -27,6 +27,7 @@
     "productName": "HangLa",
     "asar": true,
     "directories": {
+      "buildResources": "build",
       "output": "release"
     },
     "files": [
@@ -35,6 +36,7 @@
     ],
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -60,6 +62,7 @@
       "artifactName": "${productName}-${version}-portable-${arch}.${ext}"
     },
     "mac": {
+      "icon": "build/icon.icns",
       "category": "public.app-category.utilities",
       "target": [
         {

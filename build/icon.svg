@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">HangLa App Icon</title>
+  <desc id="desc">A square app icon split diagonally with a black slash, red upper-left field with the Chinese character 夯, and white lower-right field with the Chinese character 拉.</desc>
+  <rect width="1024" height="1024" fill="#ffffff" />
+  <polygon points="0,0 1024,0 0,1024" fill="#d8291f" />
+  <line x1="-96" y1="1120" x2="1120" y2="-96" stroke="#111111" stroke-width="78" stroke-linecap="square" />
+  <text
+    x="290"
+    y="324"
+    fill="#111111"
+    font-size="332"
+    font-weight="900"
+    text-anchor="middle"
+    dominant-baseline="central"
+    font-family="PingFang SC, Microsoft YaHei UI, Noto Sans CJK SC, Source Han Sans SC, sans-serif"
+  >夯</text>
+  <text
+    x="736"
+    y="734"
+    fill="#111111"
+    font-size="332"
+    font-weight="900"
+    text-anchor="middle"
+    dominant-baseline="central"
+    font-family="PingFang SC, Microsoft YaHei UI, Noto Sans CJK SC, Source Han Sans SC, sans-serif"
+  >拉</text>
+</svg>
