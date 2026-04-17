@@ -1,3 +1,7 @@
+<p align="center">
+	<img src="./build/icon.svg" alt="HangLa Logo" width="120" />
+</p>
+
 # hang-la
 
 一个“夯到拉”桌面排序工具，用来把一组内容按中国互联网语境下的“夯、顶级、人上人、NPC、拉完了”进行可视化分档。
